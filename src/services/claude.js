@@ -2,7 +2,20 @@ import Anthropic from '@anthropic-ai/sdk'
 import { getAvailableSlots, createAppointment, cancelAppointment } from './calendar.js'
 import { supabase } from '../config/supabase.js'
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+console.log('[claude.js] Inicializando Anthropic...')
+if (!process.env.ANTHROPIC_API_KEY) {
+  console.error('[claude.js ERROR] ANTHROPIC_API_KEY no configurada')
+  process.exit(1)
+}
+
+let anthropic
+try {
+  anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+  console.log('[claude.js] Anthropic inicializado correctamente')
+} catch (err) {
+  console.error('[claude.js ERROR]', err.message)
+  process.exit(1)
+}
 
 // ─── Herramientas que Claude puede ejecutar ───────────────────────────────────
 
