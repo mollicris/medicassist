@@ -73,3 +73,14 @@ app.listen(PORT, () => {
   console.log(`🏥 MediAssist API corriendo en http://localhost:${PORT}`)
   console.log(`📋 Entorno: ${process.env.NODE_ENV || 'development'}`)
 })
+
+// Manejo de errores no capturados
+process.on('uncaughtException', (err) => {
+  console.error('[Uncaught Exception]', err)
+  process.exit(1)
+})
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('[Unhandled Rejection]', reason)
+  process.exit(1)
+})
