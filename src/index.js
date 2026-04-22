@@ -31,6 +31,7 @@ app.use('/api/appointments', appointmentRoutes)
 app.use('/auth', authRoutes)
 app.use('/api/webhooks', webhookRoutes)
 
+app.get('/', (_, res) => res.json({ status: 'ok', service: 'MediAssist' }))
 app.get('/health', (_, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }))
 
 app.use((_, res) => res.status(404).json({ error: 'Ruta no encontrada.' }))
