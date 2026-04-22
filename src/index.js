@@ -63,9 +63,12 @@ app.use((err, _req, res, _next) => {
 })
 
 console.log('[LISTEN] Escuchando en puerto', PORT)
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`🏥 MediAssist API corriendo en http://localhost:${PORT}`)
+  console.log('[READY] Servidor listo')
 })
+
+server.keepAliveTimeout = 65000
 
 process.on('uncaughtException', (err) => {
   console.error('[CRASH]', err)
@@ -77,4 +80,10 @@ process.on('unhandledRejection', (reason) => {
   process.exit(1)
 })
 
-console.log('[READY] Servidor listo')
+process.on('SIGTERM', () => {
+  console.log('[SIGTERM] Servidor cerrando gracefully...')
+  server.close(() => {
+    console.log('[CLOSE] Servidor cerrado')
+    process.exit(0)
+  })
+})

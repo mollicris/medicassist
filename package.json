@@ -6,8 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "node --watch src/index.js",
-    "start": "node --trace-warnings src/index.js",
-    "build": "npm install"
+    "start": "node --no-deprecation src/index.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
