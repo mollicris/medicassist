@@ -10,6 +10,15 @@ import appointmentRoutes from './routes/appointments.js'
 import authRoutes from './routes/auth.js'
 import webhookRoutes from './routes/webhooks.js'
 
+// Validar variables de entorno críticas
+const requiredEnvVars = ['SUPABASE_URL', 'SUPABASE_SERVICE_KEY', 'ANTHROPIC_API_KEY']
+const missingVars = requiredEnvVars.filter(v => !process.env[v])
+
+if (missingVars.length > 0) {
+  console.error('❌ Variables de entorno faltantes:', missingVars)
+  process.exit(1)
+}
+
 const app = express()
 const PORT = process.env.PORT || 3000
 
