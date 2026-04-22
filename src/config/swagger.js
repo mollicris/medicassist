@@ -14,12 +14,10 @@ const options = {
     },
     servers: [
       {
-        url: `http://localhost:${process.env.PORT || 3000}`,
-        description: 'Development server',
-      },
-      {
-        url: 'https://api.mediassist.com',
-        description: 'Production server',
+        url: process.env.NODE_ENV === 'production'
+          ? `https://${process.env.RAILWAY_STATIC_URL || process.env.RAILWAY_PUBLIC_DOMAIN || 'api.mediassist.com'}`
+          : `http://localhost:${process.env.PORT || 3000}`,
+        description: process.env.NODE_ENV === 'production' ? 'Production' : 'Development',
       },
     ],
     components: {
