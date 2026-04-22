@@ -3,12 +3,15 @@ import express from 'express'
 import cors from 'cors'
 import helmet from 'helmet'
 import swaggerUi from 'swagger-ui-express'
+
+console.log('Loading config...')
 import { swaggerSpec } from './config/swagger.js'
 import chatRoutes from './routes/chat.js'
 import appointmentRoutes from './routes/appointments.js'
 import authRoutes from './routes/auth.js'
 import webhookRoutes from './routes/webhooks.js'
 
+console.log('Creating app...')
 const app = express()
 const PORT = process.env.PORT || 3000
 
@@ -32,33 +35,36 @@ app.use('/auth', authRoutes)
 app.use('/api/webhooks', webhookRoutes)
 
 app.get('/', (_, res) => res.json({ status: 'ok', service: 'MediAssist' }))
-app.get('/health', (_, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }))
+app.get('/health', (_, res) => res.json({ status: 'ok' }))
 
-app.use((_, res) => res.status(404).json({ error: 'Ruta no encontrada.' }))
+app.use((_, res) => res.status(404).json({ error: 'Not found' }))
 app.use((err, _req, res, _next) => {
-  console.error('[ERROR]', err)
-  res.status(500).json({ error: 'Error interno del servidor.' })
+  console.error('Error:', err)
+  res.status(500).json({ error: 'Internal server error' })
 })
 
+console.log('Starting server on port', PORT)
 const server = app.listen(PORT, () => {
-  console.log(`✅ Server running on port ${PORT}`)
+  console.log('✅ Server running')
 })
-
-console.log('Server initialized')
 
 server.keepAliveTimeout = 65000
 
+setTimeout(() => {
+  console.log('Server is alive')
+}, 1000)
+
 process.on('uncaughtException', (err) => {
-  console.error('[UNCAUGHT]', err)
-  process.exit(1)
+  console.error('Uncaught exception:', err)
 })
 
-process.on('unhandledRejection', (reason) => {
-  console.error('[REJECTION]', reason)
-  process.exit(1)
+process.on('unhandledRejection', (err) => {
+  console.error('Unhandled rejection:', err)
 })
 
 process.on('SIGTERM', () => {
-  server.close(() => process.exit(0))
-  setTimeout(() => process.exit(0), 30000)
+  console.log('SIGTERM received')
+  server.close()
 })
+
+console.log('App initialized')
