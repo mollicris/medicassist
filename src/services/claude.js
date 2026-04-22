@@ -11,10 +11,11 @@ if (!process.env.ANTHROPIC_API_KEY) {
 let anthropic
 try {
   anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-  console.log('[claude.js] Anthropic inicializado correctamente')
+  console.log('[claude.js] ✓ Anthropic inicializado correctamente')
 } catch (err) {
-  console.error('[claude.js ERROR]', err.message)
-  process.exit(1)
+  console.error('[claude.js ERROR] Al inicializar Anthropic:', err.message)
+  console.error('[claude.js ERROR] Stack:', err.stack)
+  throw err
 }
 
 // ─── Herramientas que Claude puede ejecutar ───────────────────────────────────
