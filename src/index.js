@@ -44,9 +44,15 @@ app.use((err, _req, res, _next) => {
 })
 
 console.log('Starting server on port', PORT)
-const server = app.listen(PORT, () => {
-  console.log('✅ Server running')
-})
+try {
+  const server = app.listen(PORT, () => {
+    console.log('✅ Server running')
+  })
+  console.log('listen() called successfully')
+} catch (err) {
+  console.error('Error in listen():', err.message)
+  process.exit(1)
+}
 
 server.keepAliveTimeout = 65000
 
