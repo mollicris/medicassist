@@ -40,8 +40,10 @@ app.use((err, _req, res, _next) => {
 })
 
 const server = app.listen(PORT, () => {
-  console.log(`🏥 MediAssist API en http://localhost:${PORT}`)
+  console.log(`✅ Server running on port ${PORT}`)
 })
+
+console.log('Server initialized')
 
 server.keepAliveTimeout = 65000
 
