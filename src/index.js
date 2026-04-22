@@ -17,11 +17,9 @@ const PORT = process.env.PORT || 3000
 
 app.use(helmet())
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production'
-    ? (process.env.CORS_ORIGINS || 'https://tu-clinica.com').split(',').map(o => o.trim())
-    : ['*'],
-  methods: ['GET', 'POST', 'PATCH', 'DELETE'],
-  credentials: true,
+  origin: '*',
+  methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+  credentials: false,
 }))
 app.use(express.json())
 
