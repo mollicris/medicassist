@@ -1,14 +1,33 @@
 import 'dotenv/config'
-import express from 'express'
-import cors from 'cors'
-import helmet from 'helmet'
-import swaggerUi from 'swagger-ui-express'
+console.log('✓ dotenv cargado')
 
+import express from 'express'
+console.log('✓ express cargado')
+
+import cors from 'cors'
+console.log('✓ cors cargado')
+
+import helmet from 'helmet'
+console.log('✓ helmet cargado')
+
+import swaggerUi from 'swagger-ui-express'
+console.log('✓ swagger-ui cargado')
+
+console.log('Cargando configuración...')
 import { swaggerSpec } from './config/swagger.js'
+console.log('✓ swagger cargado')
+
 import chatRoutes from './routes/chat.js'
+console.log('✓ chat routes cargado')
+
 import appointmentRoutes from './routes/appointments.js'
+console.log('✓ appointments routes cargado')
+
 import authRoutes from './routes/auth.js'
+console.log('✓ auth routes cargado')
+
 import webhookRoutes from './routes/webhooks.js'
+console.log('✓ webhooks routes cargado')
 
 // Validar variables de entorno críticas
 const requiredEnvVars = ['SUPABASE_URL', 'SUPABASE_SERVICE_KEY', 'ANTHROPIC_API_KEY']
