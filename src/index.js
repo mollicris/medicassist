@@ -1,37 +1,14 @@
-console.log('[START] Iniciando servidor...')
-
 import 'dotenv/config'
-console.log('[OK] dotenv cargado')
-
 import express from 'express'
-console.log('[OK] express cargado')
-
 import cors from 'cors'
-console.log('[OK] cors cargado')
-
 import helmet from 'helmet'
-console.log('[OK] helmet cargado')
-
 import swaggerUi from 'swagger-ui-express'
-console.log('[OK] swagger-ui-express cargado')
-
-console.log('[LOAD] Cargando rutas y config...')
 import { swaggerSpec } from './config/swagger.js'
-console.log('[OK] swagger config cargado')
-
 import chatRoutes from './routes/chat.js'
-console.log('[OK] chat routes cargado')
-
 import appointmentRoutes from './routes/appointments.js'
-console.log('[OK] appointments routes cargado')
-
 import authRoutes from './routes/auth.js'
-console.log('[OK] auth routes cargado')
-
 import webhookRoutes from './routes/webhooks.js'
-console.log('[OK] webhooks routes cargado')
 
-console.log('[SETUP] Configurando app...')
 const app = express()
 const PORT = process.env.PORT || 3000
 
@@ -54,7 +31,7 @@ app.use('/api/appointments', appointmentRoutes)
 app.use('/auth', authRoutes)
 app.use('/api/webhooks', webhookRoutes)
 
-app.get('/health', (_, res) => res.json({ status: 'ok', service: 'MediAssist API' }))
+app.get('/health', (_, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }))
 
 app.use((_, res) => res.status(404).json({ error: 'Ruta no encontrada.' }))
 app.use((err, _req, res, _next) => {
@@ -62,37 +39,23 @@ app.use((err, _req, res, _next) => {
   res.status(500).json({ error: 'Error interno del servidor.' })
 })
 
-console.log('[LISTEN] Escuchando en puerto', PORT)
 const server = app.listen(PORT, () => {
-  console.log(`🏥 MediAssist API corriendo en http://localhost:${PORT}`)
-  console.log('[READY] Servidor listo')
+  console.log(`🏥 MediAssist API en http://localhost:${PORT}`)
 })
 
 server.keepAliveTimeout = 65000
 
 process.on('uncaughtException', (err) => {
-  console.error('[CRASH]', err)
+  console.error('[UNCAUGHT]', err)
   process.exit(1)
 })
 
 process.on('unhandledRejection', (reason) => {
-  console.error('[REJECT]', reason)
+  console.error('[REJECTION]', reason)
   process.exit(1)
 })
 
 process.on('SIGTERM', () => {
-  console.log('[SIGTERM] Servidor cerrando gracefully...')
-  server.close(() => {
-    console.log('[CLOSE] Servidor cerrado')
-    process.exit(0)
-  })
-  setTimeout(() => {
-    console.error('[FORCE] Forzando cierre después de 30s')
-    process.exit(0)
-  }, 30000)
+  server.close(() => process.exit(0))
+  setTimeout(() => process.exit(0), 30000)
 })
-
-// Keep process alive
-setInterval(() => {
-  // Heartbeat
-}, 5000)
