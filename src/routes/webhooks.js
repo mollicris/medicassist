@@ -6,7 +6,7 @@ const router = Router()
 
 // Servicio para enviar mensajes por WhatsApp
 async function sendWhatsAppMessage(phoneNumber, message) {
-  const url = `https://graph.instagram.com/v18.0/${process.env.META_PHONE_NUMBER_ID}/messages?access_token=${process.env.META_WHATSAPP_TOKEN}`
+  const url = `https://graph.facebook.com/v25.0/${process.env.META_PHONE_NUMBER_ID}/messages`
 
   const payload = {
     messaging_product: 'whatsapp',
@@ -19,6 +19,7 @@ async function sendWhatsAppMessage(phoneNumber, message) {
     const response = await fetch(url, {
       method: 'POST',
       headers: {
+        'Authorization': `Bearer ${process.env.META_WHATSAPP_TOKEN}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(payload),
