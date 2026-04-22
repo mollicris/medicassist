@@ -44,8 +44,9 @@ app.use((err, _req, res, _next) => {
 })
 
 console.log('Starting server on port', PORT)
+let server
 try {
-  const server = app.listen(PORT, () => {
+  server = app.listen(PORT, () => {
     console.log('✅ Server running')
   })
   console.log('listen() called successfully')
@@ -54,11 +55,12 @@ try {
   process.exit(1)
 }
 
-server.keepAliveTimeout = 65000
-
-setTimeout(() => {
-  console.log('Server is alive')
-}, 1000)
+if (server) {
+  server.keepAliveTimeout = 65000
+  setTimeout(() => {
+    console.log('Server is alive')
+  }, 1000)
+}
 
 process.on('uncaughtException', (err) => {
   console.error('Uncaught exception:', err)
