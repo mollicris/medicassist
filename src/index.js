@@ -86,4 +86,13 @@ process.on('SIGTERM', () => {
     console.log('[CLOSE] Servidor cerrado')
     process.exit(0)
   })
+  setTimeout(() => {
+    console.error('[FORCE] Forzando cierre después de 30s')
+    process.exit(0)
+  }, 30000)
 })
+
+// Keep process alive
+setInterval(() => {
+  // Heartbeat
+}, 5000)
