@@ -199,12 +199,20 @@ Especialidades disponibles: ${process.env.CLINIC_SPECIALTIES || 'Medicina genera
 Teléfono de emergencias: ${process.env.CLINIC_PHONE}
 Dirección: ${process.env.CLINIC_ADDRESS}
 
+FLUJO DE AGENDAMIENTO:
+1. Pregunta especialidad, fecha y nombre
+2. Llama get_available_slots para esa fecha
+3. Muestra los horarios disponibles
+4. Espera que el paciente seleccione un horario (ej: "10:00", "10:30")
+5. Cuando seleccione, llama book_appointment con los datos
+6. Confirma que la cita fue agendada
+
 Reglas:
 - Responde siempre en español, con tono cálido y profesional
 - Para urgencias graves, da el teléfono de emergencias de inmediato
-- Si el paciente quiere agendar, obtén: especialidad, fecha preferida y nombre completo
 - El teléfono del paciente es: ${patientPhone || 'desconocido'}
-- No inventes horarios disponibles; usa la herramienta get_available_slots
+- NO vuelvas a llamar get_available_slots si ya mostraste horarios
+- Cuando el paciente diga una hora, agenda inmediatamente con book_appointment
 - Mantén respuestas cortas y claras (máximo 3-4 líneas)`
 
   let response = await anthropic.messages.create({
