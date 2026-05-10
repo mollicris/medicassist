@@ -189,28 +189,47 @@ async function executeTool(name, input) {
 // ─── Función principal: chat con Claude ──────────────────────────────────────
 
 export async function chat({ messages, patientPhone }) {
-  const systemPrompt = `Eres el asistente de citas de ${process.env.CLINIC_NAME || 'la clínica'}.
-Especialidades: ${process.env.CLINIC_SPECIALTIES || 'Medicina general, Pediatría, Ginecología, Cardiología'}
+  // Analizar el contexto de la conversación
+  const lastUserMessage = messages.filter(m => m.role === 'user').pop()?.content || ''
+  const isSelectingTime = /^\d{2}:\d{2}$/.test(lastUserMessage.trim()) || /horario|hora|time|\d{1,2}:\d{2}/i.test(lastUserMessage)
 
-INSTRUCCIONES SIMPLES:
-1. El usuario dirá algo como "quiero agendar una cita de medicina general"
-2. Extrae: especialidad, nombre del paciente, fecha preferida
-3. Si falta algo, pregunta: "¿Cuál es tu nombre?" o "¿Para qué fecha?"
-4. Cuando tengas especialidad + nombre + fecha, llama get_available_slots
-5. Muestra los horarios (ej: "Tenemos: 08:00, 09:00, 10:00")
-6. Cuando el paciente diga un horario (ej: "10:00"), llama book_appointment CON ESE HORARIO
-7. Confirma: "✅ Cita agendada"
-8. NUNCA vuelvas a preguntar después de agendar
+  const systemPrompt = `Eres asistente de citas. Teléfono: ${patientPhone || 'desconocido'}.
+
+3 FLUJOS PRINCIPALES:
+1. AGENDAR: "quiero una cita", "agendar", "reservar"
+2. CONSULTAR: "mis citas", "próximas citas", "qué tengo"
+3. CANCELAR: "cancelar cita", "eliminar cita"
+
+PARA AGENDAR:
+- Necesitas: especialidad, nombre, fecha
+- Si falta algo, PREGUNTA
+- Obtén horarios con get_available_slots
+- Cuando usuario diga hora (10:00), USA book_appointment
+
+PARA CONSULTAR:
+- SOLO necesitas el teléfono (ya lo tienes)
+- Llama get_patient_appointments
+
+PARA CANCELAR:
+- SOLO necesitas el teléfono (ya lo tienes)
+- Llama cancel_appointment
 
 IMPORTANTE:
-- Teléfono: ${patientPhone || 'desconocido'}
-- Si dice horario = agenda, no preguntes más
-- Responde en español, máximo 2 líneas`
+- Responde SOLO en español, máximo 3 líneas
+- Si ya tienes todos los datos = actúa inmediatamente
+- No repitas preguntas
+- Cuando termines una acción = da resultado y espera nuevo pedido`
+
+  // Si el último mensaje es una hora, agregar instrucción explícita
+  let systemWithContext = systemPrompt
+  if (isSelectingTime) {
+    systemWithContext += `\n\nEL USUARIO ACABA DE ESCRIBIR UNA HORA. DEBES LLAMAR book_appointment AHORA MISMO.`
+  }
 
   let response = await anthropic.messages.create({
     model: 'claude-haiku-4-5',
     max_tokens: 1024,
-    system: systemPrompt,
+    system: systemWithContext,
     tools,
     messages,
   })
@@ -218,23 +237,27 @@ IMPORTANTE:
   // Agentic loop: ejecuta herramientas si Claude las solicita
   let loopCount = 0
   const maxLoops = 10
+  console.log('[agentic loop] Inicio - stop_reason:', response.stop_reason)
 
   while (response.stop_reason === 'tool_use' && loopCount < maxLoops) {
     loopCount++
     const toolUses = response.content.filter(b => b.type === 'tool_use')
+    console.log(`[agentic loop ${loopCount}] Tools solicitadas:`, toolUses.map(t => t.name))
 
     try {
       const toolResults = await Promise.all(
         toolUses.map(async tool => {
           try {
+            console.log(`[tool] Ejecutando ${tool.name}:`, tool.input)
             const content = await executeTool(tool.name, tool.input)
+            console.log(`[tool] ${tool.name} completado:`, content.substring(0, 100))
             return {
               type: 'tool_result',
               tool_use_id: tool.id,
               content,
             }
           } catch (err) {
-            console.error(`[tool error: ${tool.name}]`, err)
+            console.error(`[tool error: ${tool.name}]`, err.message)
             return {
               type: 'tool_result',
               tool_use_id: tool.id,

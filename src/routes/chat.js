@@ -58,9 +58,11 @@ const router = Router()
 router.post('/', async (req, res) => {
   try {
     const { message, patientPhone, conversationId } = req.body
+    console.log('[chat POST] Recibido:', { message, patientPhone, conversationId })
 
     // Validaciones
     if (!message || typeof message !== 'string') {
+      console.log('[chat] Error: mensaje inválido')
       return res.status(400).json({ error: 'El mensaje es requerido y debe ser texto.' })
     }
 
@@ -116,22 +118,27 @@ router.post('/', async (req, res) => {
     const updatedHistory = [...history, { role: 'user', content: message }]
 
     // Llama a Claude
+    console.log('[chat] Llamando a Claude con mensajes:', updatedHistory.length)
     const { reply, updatedMessages } = await chat({
       messages: updatedHistory,
       patientPhone,
     })
+    console.log('[chat] Respuesta de Claude:', { reply, messagesCount: updatedMessages.length })
 
     // Agrega la respuesta al historial
     const finalHistory = [...updatedMessages, { role: 'assistant', content: reply }]
 
     // Guarda o actualiza conversación en Supabase
     let savedId = conversation?.id
+    console.log('[chat] Guardando conversación...', { existing: !!conversation, id: savedId })
 
     if (conversation) {
+      console.log('[chat] Actualizando conversación existente:', conversation.id)
       await supabase
         .from('conversations')
         .update({ messages: finalHistory, last_activity: new Date().toISOString() })
         .eq('id', conversation.id)
+      console.log('[chat] Conversación actualizada')
     } else {
       // Resuelve patient_id si hay teléfono
       let patientId = null
@@ -142,17 +149,21 @@ router.post('/', async (req, res) => {
           .eq('phone', patientPhone)
           .single()
         patientId = patient?.id || null
+        console.log('[chat] Patient encontrado:', { phone: patientPhone, id: patientId })
       }
 
-      const { data } = await supabase
+      console.log('[chat] Creando nueva conversación...')
+      const result = await supabase
         .from('conversations')
         .insert({ patient_id: patientId, messages: finalHistory, channel: 'web' })
         .select()
         .single()
 
-      savedId = data?.id
+      console.log('[chat] Resultado insert:', { data: result.data, error: result.error })
+      savedId = result.data?.id
     }
 
+    console.log('[chat] Respuesta final:', { reply: reply.substring(0, 50), conversationId: savedId })
     res.json({ reply, conversationId: savedId })
   } catch (err) {
     console.error('[chat]', err.message)
