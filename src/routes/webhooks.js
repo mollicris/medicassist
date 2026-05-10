@@ -117,18 +117,34 @@ router.post('/whatsapp', async (req, res) => {
       console.log(`[WhatsApp] De ${senderPhone}: ${messageText}`)
 
       try {
-        // Obtener o crear conversación
+        console.log(`[WhatsApp] Procesando mensaje de ${senderPhone}`)
+
+        // 1. Obtener patient_id por teléfono
+        let patientId = null
+        const { data: patient } = await supabase
+          .from('patients')
+          .select('id')
+          .eq('phone', senderPhone)
+          .single()
+
+        if (patient) {
+          patientId = patient.id
+          console.log(`[WhatsApp] Patient encontrado:`, patientId)
+        }
+
+        // 2. Obtener o crear conversación
         const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
         const { data: existingConv } = await supabase
           .from('conversations')
           .select('*')
           .eq('channel', 'whatsapp')
-          .eq('patient_phone', senderPhone)
+          .eq('patient_id', patientId)
           .gte('last_activity', since)
           .order('last_activity', { ascending: false })
           .limit(1)
           .single()
 
+        console.log(`[WhatsApp] Conversación:`, existingConv ? 'existente' : 'nueva')
         let history = existingConv?.messages || []
 
         // Agregar mensaje del usuario
@@ -149,11 +165,12 @@ router.post('/whatsapp', async (req, res) => {
             .update({ messages: finalHistory, last_activity: new Date().toISOString() })
             .eq('id', existingConv.id)
         } else {
+          console.log(`[WhatsApp] Creando nueva conversación para patient_id:`, patientId)
           await supabase
             .from('conversations')
             .insert({
               channel: 'whatsapp',
-              patient_phone: senderPhone,
+              patient_id: patientId,
               messages: finalHistory,
             })
         }
